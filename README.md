@@ -1,4 +1,4 @@
-# Sistema Solar - Laboratorio de Shaders Creativos# Solar System - Creative Shader Lab# Solar System - Creative Shader Lab
+# Sistema Solar - Laboratorio de Shaders Creativos# Sistema Solar - Laboratorio de Shaders Creativos# Solar System - Creative Shader Lab# Solar System - Creative Shader Lab
 
 
 
@@ -6,7 +6,7 @@ Un renderizador 3D por software que muestra cuerpos celestes creativos usando ú
 
 
 
-## Descripción del ProyectoA 3D software renderer showcasing creative celestial bodies using only procedural shaders - no textures or external materials.A 3D software renderer showcasing creative celestial bodies using only procedural shaders - no textures or external materials.
+## Descripción del ProyectoUn renderizador 3D por software que muestra cuerpos celestes creativos usando únicamente shaders procedurales - sin texturas ni materiales externos.
 
 
 
@@ -14,7 +14,7 @@ Este proyecto implementa un sistema solar completo con tres cuerpos celestes dis
 
 
 
-## Cuerpos Celestes## Project Overview## Features
+## Cuerpos Celestes## Descripción del ProyectoA 3D software renderer showcasing creative celestial bodies using only procedural shaders - no textures or external materials.A 3D software renderer showcasing creative celestial bodies using only procedural shaders - no textures or external materials.
 
 
 
@@ -22,179 +22,375 @@ Este proyecto implementa un sistema solar completo con tres cuerpos celestes dis
 
 **Complejidad del Shader: 4 Capas**
 
-- **Capa 1**: Gradiente de temperatura del núcleo basado en la distancia desde el centroThis project implements a complete solar system with three distinct celestial bodies, each featuring unique procedural shaders that create realistic and creative visual effects through mathematical algorithms.- ✨ **Multi-Model Rendering**: Support for different 3D models simultaneously
+- **Capa 1**: Gradiente de temperatura del núcleo basado en la distancia desde el centroEste proyecto implementa un sistema solar completo con tres cuerpos celestes distintos, cada uno con shaders procedurales únicos que crean efectos visuales realistas y creativos a través de algoritmos matemáticos.
 
 - **Capa 2**: Efecto de pulsación usando ondas sinusoidales basadas en tiempo para simular actividad solar realista
 
-- **Capa 3**: Zonas de temperatura creando núcleo blanco caliente a superficie roja más fría- 🌌 **Complete Solar System**: Sun, planets, and moons with realistic orbital mechanics
+- **Capa 3**: Zonas de temperatura creando núcleo blanco caliente a superficie roja más fría
 
 - **Capa 4**: Llamaradas solares y actividad superficial usando ruido multidimensional
 
-## Celestial Bodies- 🎥 **Interactive Camera**: 3D camera controls with rotation and zoom
+## Cuerpos Celestes## Project Overview## Features
 
 **Características Visuales:**
 
-- Núcleo blanco-amarillo brillante (simulación de temperatura >5500K)- � **Animated Skybox**: Dynamic starfield background with twinkling stars
+- Núcleo blanco-amarillo brillante (simulación de temperatura >5500K)
 
 - Capa media naranja (3000-5500K)
 
-- Capa externa roja (<3000K)### 1. Star (Sun) ⭐- ☀️ **Sun-Based Lighting**: Realistic lighting system with the sun as light source
+- Capa externa roja (<3000K)### 1. Estrella (Sol) ⭐
 
 - Efecto de pulsación dinámico simulando actividad solar
 
-- Auto-iluminado (no recibe iluminación de otras fuentes)**Shader Complexity: 4 Layers**- ⚙️ **Parametrized Rendering Pipeline**: Each model has its own transformation matrix
+- Auto-iluminado (no recibe iluminación de otras fuentes)**Complejidad del Shader: 4 Capas**
 
 
 
-### 2. Planeta Rocoso (Terrestre) 🌍- **Layer 1**: Core temperature gradient based on distance from center- 🎨 **Shader System**: Parametrized shaders supporting multiple render modes
+### 2. Planeta Rocoso (Terrestre) 🌍- **Capa 1**: Gradiente de temperatura del núcleo basado en la distancia desde el centroThis project implements a complete solar system with three distinct celestial bodies, each featuring unique procedural shaders that create realistic and creative visual effects through mathematical algorithms.- ✨ **Multi-Model Rendering**: Support for different 3D models simultaneously
 
 **Complejidad del Shader: 4 Capas**
 
-- **Capa 1**: Altura del terreno base usando ruido basado en posición para elevación- **Layer 2**: Pulsing effect using time-based sine waves for realistic solar activity
+- **Capa 1**: Altura del terreno base usando ruido basado en posición para elevación- **Capa 2**: Efecto de pulsación usando ondas sinusoidales basadas en tiempo para simular actividad solar realista
 
 - **Capa 2**: Patrones de cráteres simulando geología de impacto
 
-- **Capa 3**: Venas minerales y variación de composición superficial- **Layer 3**: Temperature zones creating hot white core to cooler red surface## Solar System Components
+- **Capa 3**: Venas minerales y variación de composición superficial- **Capa 3**: Zonas de temperatura creando núcleo blanco caliente a superficie roja más fría- 🌌 **Complete Solar System**: Sun, planets, and moons with realistic orbital mechanics
 
 - **Capa 4**: Cálculos de rugosidad superficial basados en vectores normales
 
-- **Layer 4**: Solar flares and surface activity using multi-dimensional noise
+- **Capa 4**: Llamaradas solares y actividad superficial usando ruido multidimensional
 
 **Características Visuales:**
 
-- Áreas montañosas ricas en hierro (coloración marrón-rojiza)### ☀️ **Sun** (Center)
+- Áreas montañosas ricas en hierro (coloración marrón-rojiza)## Celestial Bodies- 🎥 **Interactive Camera**: 3D camera controls with rotation and zoom
 
 - Terreno montañoso gris-marrón
 
-- Regiones más oscuras de tierras bajas y cráteres de impacto**Visual Features:**- **Model**: Planet.obj (large scale)
+- Regiones más oscuras de tierras bajas y cráteres de impacto**Características Visuales:**
 
 - Mapeo realista de elevación del terreno
 
-- Cálculos completos de iluminación plana- Bright white-yellow core (>5500K temperature simulation)- **Color**: Gold (#FFD700)
+- Cálculos completos de iluminación plana- Núcleo blanco-amarillo brillante (simulación de temperatura >5500K)- � **Animated Skybox**: Dynamic starfield background with twinkling stars
 
 
 
-### 3. Gigante Gaseoso (Joviano) - Planeta del Tesoro 🪐- Orange mid-layer (3000-5500K)- **Behavior**: Self-illuminated light source with rotation
+### 3. Gigante Gaseoso (Joviano) - Planeta del Tesoro 🪐- Capa media naranja (3000-5500K)
 
 **Complejidad del Shader: 4 Capas**
 
-- **Capa 1**: Bandas atmosféricas basadas en latitud (bandas estilo Júpiter)- Red outer layer (<3000K) 
+- **Capa 1**: Bandas atmosféricas basadas en latitud (bandas estilo Júpiter)- Capa externa roja (<3000K)### 1. Star (Sun) ⭐- ☀️ **Sun-Based Lighting**: Realistic lighting system with the sun as light source
 
 - **Capa 2**: Sistemas de tormentas y patrones de turbulencia
 
-- **Capa 3**: Variación de composición gaseosa afectando la distribución de color- Dynamic pulsing effect simulating solar activity### 🌍 **Planet** 
+- **Capa 3**: Variación de composición gaseosa afectando la distribución de color- Efecto de pulsación dinámico simulando actividad solar
 
 - **Capa 4**: Efectos de profundidad atmosférica para renderizado volumétrico realista
 
-- Self-illuminated (doesn't receive lighting from other sources)- **Model**: Planet.obj (smaller scale)
+- Auto-iluminado (no recibe iluminación de otras fuentes)**Shader Complexity: 4 Layers**- ⚙️ **Parametrized Rendering Pipeline**: Each model has its own transformation matrix
 
 **Características Visuales:**
 
-- Inspirado en el **Planeta del Tesoro** de Disney- **Color**: Royal Blue (#4169E1)
+- Inspirado en el **Planeta del Tesoro** de Disney
 
 - Zonas atmosféricas de color crema/blanco claro
 
-- Regiones de cinturones marrones oscuros### 2. Rocky Planet (Terrestrial) 🌍- **Orbit**: Medium distance from sun
+- Regiones de cinturones marrones oscuros### 2. Planeta Rocoso (Terrestre) 🌍- **Layer 1**: Core temperature gradient based on distance from center- 🎨 **Shader System**: Parametrized shaders supporting multiple render modes
 
 - Áreas de tormenta rojizas (inspiradas en la Gran Mancha Roja)
 
-- Turbulencia atmosférica dinámica**Shader Complexity: 4 Layers**- **Lighting**: Receives dynamic lighting from sun
+- Turbulencia atmosférica dinámica**Complejidad del Shader: 4 Capas**
 
 - Paleta de colores realista de gigante gaseoso
 
-- **Layer 1**: Base terrain height using position-based noise for elevation- **Moon**: Has a moon orbiting around it
+- **Capa 1**: Altura del terreno base usando ruido basado en posición para elevación- **Layer 2**: Pulsing effect using time-based sine waves for realistic solar activity
 
 ### 4. Luna Rocosa - Basketball de Un Show Más 🌙
 
-**Características Visuales:**- **Layer 2**: Crater patterns simulating impact geology
+**Características Visuales:**- **Capa 2**: Patrones de cráteres simulando geología de impacto
 
 - Inspirada en la **Luna de Basketball** de "Un Show Más" (Regular Show)
 
-- Usa el mismo shader del planeta rocoso con parámetros diferentes- **Layer 3**: Mineral veins and surface composition variation### 🌙 **Moon**
+- Usa el mismo shader del planeta rocoso con parámetros diferentes- **Capa 3**: Venas minerales y variación de composición superficial- **Layer 3**: Temperature zones creating hot white core to cooler red surface## Solar System Components
 
 - Patrones de cráteres a menor escala
 
-- Coloración gris-marrón típica de cuerpos sin atmósfera- **Layer 4**: Surface roughness calculations based on normal vectors- **Model**: basketmoon.obj
+- Coloración gris-marrón típica de cuerpos sin atmósfera- **Capa 4**: Cálculos de rugosidad superficial basados en vectores normales
 
 - Orbita alrededor del Planeta Rocoso
 
-- **Color**: Silver (#C0C0C0)
+- **Layer 4**: Solar flares and surface activity using multi-dimensional noise
 
 ## Implementación Técnica
 
-**Visual Features:**- **Behavior**: Orbits around the Planet
+**Características Visuales:**
 
 ### Sistema de Iluminación
 
-Implementa **Flat Shading** como se especifica en los requerimientos:- Iron-rich highland areas (reddish-brown coloring)- **Lighting**: Shows lunar phases based on sun position
+Implementa **Flat Shading** como se especifica en los requerimientos:- Áreas montañosas ricas en hierro (coloración marrón-rojiza)### ☀️ **Sun** (Center)
 
 - Calcula normales de triángulo usando producto cruz de vectores de borde
 
-- Fuente de luz puntual (Sol) en el centro del sistema- Grayish-brown highland terrain
+- Fuente de luz puntual (Sol) en el centro del sistema- Terreno montañoso gris-marrón
 
 - Dirección de luz calculada desde posición de luz hasta centro del triángulo
 
-- Intensidad = dot(normal, lightDirection) con limitación apropiada- Darker lowland and impact crater regions### 🪐 **Third Planet**
+- Intensidad = dot(normal, lightDirection) con limitación apropiada- Regiones más oscuras de tierras bajas y cráteres de impacto**Visual Features:**- **Model**: Planet.obj (large scale)
 
 - Fragment shader aplica intensidad al color según referencia: `fragment.color * fragment.intensity`
 
-- Realistic terrain elevation mapping- **Model**: trasureP.obj
+- Mapeo realista de elevación del terreno
 
 ### Pipeline de Gráficos
 
-1. **Vertex Shader**: Transformación Modelo → Mundo → Vista → Clip → Espacio de pantalla- Full flat-shading lighting calculations- **Color**: Blue Violet (#8A2BE2)
+1. **Vertex Shader**: Transformación Modelo → Mundo → Vista → Clip → Espacio de pantalla- Cálculos completos de iluminación plana- Bright white-yellow core (>5500K temperature simulation)- **Color**: Gold (#FFD700)
 
 2. **Rasterización**: Rasterización de triángulos con coordenadas baricéntricas
 
-3. **Fragment Shader**: Aplica intensidad de iluminación y efectos procedurales- **Orbit**: Outer orbit, slower movement
+3. **Fragment Shader**: Aplica intensidad de iluminación y efectos procedurales
 
 4. **Prueba de Profundidad**: Z-buffer para renderizado 3D correcto
 
-### 3. Gas Giant (Jovian) 🪐- **Lighting**: Distance-based illumination from sun
+### 3. Gigante Gaseoso (Joviano) - Planeta del Tesoro 🪐- Orange mid-layer (3000-5500K)- **Behavior**: Self-illuminated light source with rotation
 
 ### Arquitectura de Shaders
 
-Cada cuerpo celeste usa un `ShaderType` específico:**Shader Complexity: 4 Layers**
+Cada cuerpo celeste usa un `ShaderType` específico:**Complejidad del Shader: 4 Capas**
 
 - `ShaderType::Star` - Renderizado basado en emisión para el sol
 
-- `ShaderType::RockyPlanet` - Características de terreno y geología- **Layer 1**: Atmospheric bands based on latitude (Jupiter-like banding)### 🌌 **Skybox**
+- `ShaderType::RockyPlanet` - Características de terreno y geología- **Capa 1**: Bandas atmosféricas basadas en latitud (bandas estilo Júpiter)- Red outer layer (<3000K) 
 
 - `ShaderType::GasGiant` - Efectos atmosféricos y gaseosos
 
-- **Layer 2**: Storm systems and turbulence patterns- **Type**: Large sphere containing the solar system
+- **Capa 2**: Sistemas de tormentas y patrones de turbulencia
 
 ### Sistema de Cámara
 
-- **Cámara LookAt**: Orbita alrededor del centro del sistema solar- **Layer 3**: Gas composition variation affecting color distribution- **Effect**: Procedural starfield with twinkling animation
+- **Cámara LookAt**: Orbita alrededor del centro del sistema solar- **Capa 3**: Variación de composición gaseosa afectando la distribución de color- Dynamic pulsing effect simulating solar activity### 🌍 **Planet** 
 
 - **Coordenadas Esféricas**: Movimiento orbital suave
 
-- **Controles**: Teclas de dirección para orbitar, A/S para zoom- **Layer 4**: Atmospheric depth effects for realistic volume rendering- **Features**: 
+- **Controles**: Teclas de dirección para orbitar, A/S para zoom- **Capa 4**: Efectos de profundidad atmosférica para renderizado volumétrico realista
 
 - **Proyección**: Proyección perspectiva con transformación de viewport apropiada
 
-  - Pseudo-random star distribution
+- Self-illuminated (doesn't receive lighting from other sources)- **Model**: Planet.obj (smaller scale)
 
 ## Paleta de Colores
 
-**Visual Features:**  - Time-based twinkling effect
+**Características Visuales:**
 
 ### Fondo
 
-- **Púrpura Oscuro del Espacio**: `#2D1B69` - Crea un ambiente atmosférico del espacio profundo- Light cream/white atmospheric zones  - Subtle space color variation
+- **Púrpura Oscuro del Espacio**: `#2D1B69` - Crea un ambiente atmosférico del espacio profundo- Inspirado en el **Planeta del Tesoro** de Disney- **Color**: Royal Blue (#4169E1)
 
 
 
-### Cuerpos Celestes- Dark brown belt regions  - No lighting influence (stars are self-illuminated)
+### Cuerpos Celestes- Zonas atmosféricas de color crema/blanco claro
 
 - **Sol**: Dorado/blanco/naranja/rojo dinámico basado en simulación de temperatura
 
-- **Planeta Rocoso**: Marrones, grises y rojo-hierro basados en características geológicas- Reddish storm areas (Great Red Spot inspired)
+- **Planeta Rocoso**: Marrones, grises y rojo-hierro basados en características geológicas- Regiones de cinturones marrones oscuros### 2. Rocky Planet (Terrestrial) 🌍- **Orbit**: Medium distance from sun
 
 - **Gigante Gaseoso**: Colores crema, marrón y tormentas rojizas (inspirado en Júpiter/Planeta del Tesoro)
 
-- **Luna**: Superficie rocosa gris-marrón (Luna de Basketball)- Dynamic atmospheric turbulence## Controls
+- **Luna**: Superficie rocosa gris-marrón (Luna de Basketball)- Áreas de tormenta rojizas (inspiradas en la Gran Mancha Roja)
+
+
+
+## Requerimientos Cumplidos- Turbulencia atmosférica dinámica**Shader Complexity: 4 Layers**- **Lighting**: Receives dynamic lighting from sun
+
+
+
+✅ **3 Cuerpos Celestes Requeridos**: Estrella, Planeta Rocoso, Gigante Gaseoso  - Paleta de colores realista de gigante gaseoso
+
+✅ **Renderizado Solo con Shaders**: No se usaron texturas ni materiales externos  
+
+✅ **Implementación de Flat Shading**: Siguiendo la referencia proporcionada exactamente  - **Layer 1**: Base terrain height using position-based noise for elevation- **Moon**: Has a moon orbiting around it
+
+✅ **Diseño Creativo**: 4+ capas por shader para máxima complejidad  
+
+✅ **Fondo**: Ambiente espacial púrpura oscuro  ### 4. Luna Rocosa - Basketball de Un Show Más 🌙
+
+✅ **Mecánica Orbital**: Rotación y traslación implementadas  
+
+✅ **Características Adicionales**: Luna rocosa orbitando el planeta terrestre  **Características Visuales:**- **Layer 2**: Crater patterns simulating impact geology
+
+
+
+## Desglose de Complejidad de Shaders- Inspirada en la **Luna de Basketball** de "Un Show Más" (Regular Show)
+
+
+
+| Cuerpo Celeste | Capas | Características de Complejidad |- Usa el mismo shader del planeta rocoso con parámetros diferentes- **Layer 3**: Mineral veins and surface composition variation### 🌙 **Moon**
+
+|-----------------|-------|---------------------------------|
+
+| Estrella | 4 | Gradiente temperatura + Pulsación + Zonas + Actividad solar |- Patrones de cráteres a menor escala
+
+| Planeta Rocoso | 4 | Altura terreno + Cráteres + Minerales + Rugosidad superficie |
+
+| Gigante Gaseoso | 4 | Bandas atmosféricas + Tormentas + Composición + Profundidad |- Coloración gris-marrón típica de cuerpos sin atmósfera- **Layer 4**: Surface roughness calculations based on normal vectors- **Model**: basketmoon.obj
+
+| **Total** | **12** | **Máxima complejidad lograda** |
+
+- Orbita alrededor del Planeta Rocoso
+
+## Controles
+
+- **Color**: Silver (#C0C0C0)
+
+- **Teclas de Dirección**: Orbitar cámara alrededor del sistema solar
+
+- **A**: Acercar al centro## Implementación Técnica
+
+- **S**: Alejar del centro  
+
+- **Escape**: Salir de la aplicación**Visual Features:**- **Behavior**: Orbits around the Planet
+
+
+
+## Especificaciones Técnicas### Sistema de Iluminación
+
+
+
+- **Lenguaje**: RustImplementa **Flat Shading** como se especifica en los requerimientos:- Iron-rich highland areas (reddish-brown coloring)- **Lighting**: Shows lunar phases based on sun position
+
+- **Gráficos**: Renderizador por software personalizado (sin OpenGL/Vulkan)
+
+- **Resolución**: 800x600 píxeles- Calcula normales de triángulo usando producto cruz de vectores de borde
+
+- **Framework**: minifb para ventanas, nalgebra-glm para matemáticas
+
+- **Renderizado**: Pipeline 3D completo con Z-buffering- Fuente de luz puntual (Sol) en el centro del sistema- Grayish-brown highland terrain
+
+
+
+## Instalación y Ejecución- Dirección de luz calculada desde posición de luz hasta centro del triángulo
+
+
+
+```bash- Intensidad = dot(normal, lightDirection) con limitación apropiada- Darker lowland and impact crater regions### 🪐 **Third Planet**
+
+# Clonar repositorio
+
+git clone https://github.com/FelipeAP04/Space_travel.git- Fragment shader aplica intensidad al color según referencia: `fragment.color * fragment.intensity`
+
+cd Space_travel
+
+- Realistic terrain elevation mapping- **Model**: trasureP.obj
+
+# Ejecutar la aplicación
+
+cargo run --release### Pipeline de Gráficos
+
+```
+
+1. **Vertex Shader**: Transformación Modelo → Mundo → Vista → Clip → Espacio de pantalla- Full flat-shading lighting calculations- **Color**: Blue Violet (#8A2BE2)
+
+## Referencias Culturales
+
+2. **Rasterización**: Rasterización de triángulos con coordenadas baricéntricas
+
+- **Luna de Basketball**: Inspirada en el episodio "The Power" de Regular Show donde la luna se convierte en una pelota de basketball
+
+- **Planeta del Tesoro**: El gigante gaseoso está inspirado en la estética del planeta Montressor de la película "Treasure Planet" de Disney3. **Fragment Shader**: Aplica intensidad de iluminación y efectos procedurales- **Orbit**: Outer orbit, slower movement
+
+
+
+## Capturas de Pantalla4. **Prueba de Profundidad**: Z-buffer para renderizado 3D correcto
+
+
+
+### Instrucciones para Capturas### 3. Gas Giant (Jovian) 🪐- **Lighting**: Distance-based illumination from sun
+
+Para completar la documentación, ejecutar el programa y tomar las siguientes capturas:
+
+### Arquitectura de Shaders
+
+1. **Sistema Solar Completo**: Vista general mostrando todos los cuerpos celestes
+
+2. **Estrella (Sol)**: Acercamiento al sol mostrando efectos de pulsación y temperatura  Cada cuerpo celeste usa un `ShaderType` específico:**Shader Complexity: 4 Layers**
+
+3. **Planeta Rocoso**: Vista detallada de las características geológicas
+
+4. **Gigante Gaseoso**: Bandas atmosféricas y tormentas del Planeta del Tesoro- `ShaderType::Star` - Renderizado basado en emisión para el sol
+
+5. **Luna de Basketball**: La luna orbitando el planeta rocoso
+
+- `ShaderType::RockyPlanet` - Características de terreno y geología- **Layer 1**: Atmospheric bands based on latitude (Jupiter-like banding)### 🌌 **Skybox**
+
+### Controles para Capturas
+
+- Usar **A/S** para zoom y **flechas** para orbitar- `ShaderType::GasGiant` - Efectos atmosféricos y gaseosos
+
+- Tomar capturas en diferentes ángulos para mostrar los shaders
+
+- Guardar las imágenes en la carpeta `screenshots/`- **Layer 2**: Storm systems and turbulence patterns- **Type**: Large sphere containing the solar system
+
+
+
+### Sistema Solar Completo### Sistema de Cámara
+
+*Pendiente: Captura del sistema solar completo*
+
+- **Cámara LookAt**: Orbita alrededor del centro del sistema solar- **Layer 3**: Gas composition variation affecting color distribution- **Effect**: Procedural starfield with twinkling animation
+
+### Estrella (Sol)  
+
+*Pendiente: Captura del sol con efectos de shader*- **Coordenadas Esféricas**: Movimiento orbital suave
+
+
+
+### Planeta Rocoso- **Controles**: Teclas de dirección para orbitar, A/S para zoom- **Layer 4**: Atmospheric depth effects for realistic volume rendering- **Features**: 
+
+*Pendiente: Captura del planeta rocoso mostrando características geológicas*
+
+- **Proyección**: Proyección perspectiva con transformación de viewport apropiada
+
+### Gigante Gaseoso (Planeta del Tesoro)
+
+*Pendiente: Captura del gigante gaseoso con bandas atmosféricas*  - Pseudo-random star distribution
+
+
+
+### Luna de Basketball## Paleta de Colores
+
+*Pendiente: Captura de la luna de Regular Show orbitando*
+
+**Visual Features:**  - Time-based twinkling effect
+
+## Estructura del Proyecto
+
+### Fondo
+
+```
+
+src/- **Púrpura Oscuro del Espacio**: `#2D1B69` - Crea un ambiente atmosférico del espacio profundo- Light cream/white atmospheric zones  - Subtle space color variation
+
+├── main.rs           # Aplicación principal y definiciones de cuerpos celestes
+
+├── shaders.rs        # Todas las implementaciones de shaders e iluminación
+
+├── triangle.rs       # Rasterización y cálculos de flat shading  
+
+├── framebuffer.rs    # Buffer de pantalla y pruebas de profundidad### Cuerpos Celestes- Dark brown belt regions  - No lighting influence (stars are self-illuminated)
+
+├── camera.rs         # Sistema de cámara LookAt
+
+├── vertex.rs         # Estructura de vértices y transformaciones- **Sol**: Dorado/blanco/naranja/rojo dinámico basado en simulación de temperatura
+
+├── fragment.rs       # Estructura de fragmentos con intensidad de iluminación
+
+├── color.rs          # Utilidades y operaciones de color- **Planeta Rocoso**: Marrones, grises y rojo-hierro basados en características geológicas- Reddish storm areas (Great Red Spot inspired)
+
+└── obj.rs           # Utilidades de carga de modelos 3D
+
+```- **Gigante Gaseoso**: Colores crema, marrón y tormentas rojizas (inspirado en Júpiter/Planeta del Tesoro)
+
+
+
+Este proyecto demuestra técnicas avanzadas de shaders procedurales manteniendo la restricción de renderizado solo por software sin texturas o materiales externos.- **Luna**: Superficie rocosa gris-marrón (Luna de Basketball)- Dynamic atmospheric turbulence## Controls
 
 
 
