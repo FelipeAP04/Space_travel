@@ -61,6 +61,14 @@ pub fn vertex_shader(vertex: &Vertex, uniforms: &Uniforms) -> Vertex {
       // Gas giant with atmospheric bands
       gas_giant_shader(vertex.position, transformed_normal, uniforms.time)
     }
+    ShaderType::Spaceship => {
+      // Spaceship shader - metallic with some wear
+      spaceship_shader(vertex.position, transformed_normal, uniforms.time)
+    }
+    ShaderType::Orbit => {
+      // Orbit visualization shader
+      orbit_shader(vertex.position, uniforms.time)
+    }
   };
 
   // Create a new Vertex with transformed attributes and lighting
@@ -239,5 +247,57 @@ fn gas_giant_shader(position: Vec3, normal: Vec3, time: f32) -> Color {
     // Storm regions (reddish spots)
     Color::new((200.0 * final_factor) as u8, (140.0 * final_factor) as u8, (100.0 * final_factor) as u8)
   }
+}
+
+// Spaceship shader - creates metallic appearance with wear and detail
+fn spaceship_shader(position: Vec3, normal: Vec3, time: f32) -> Color {
+  // Layer 1: Base metallic color
+  let base_metallic = 0.7;
+  
+  // Layer 2: Panel details and seams
+  let panel_x = ((position.x * 2.0).sin() * 0.5 + 0.5).min(0.9);
+  let panel_z = ((position.z * 2.0).cos() * 0.5 + 0.5).min(0.9);
+  let panel_detail = (panel_x + panel_z) * 0.3 + 0.7;
+  
+  // Layer 3: Surface wear and aging
+  let wear_pattern = ((position.x + position.y + position.z) * 1.5).sin() * 0.1 + 0.9;
+  
+  // Layer 4: Engine glow or lights (time-based)
+  let light_pulse = (time * 2.0).sin() * 0.1 + 0.9;
+  let engine_glow = if position.z < -0.5 { light_pulse } else { 1.0 };
+  
+  // Combine layers for spaceship appearance
+  let final_intensity = base_metallic * panel_detail * wear_pattern * engine_glow;
+  let normal_factor = (normal.magnitude() * 0.8 + 0.2).min(1.0);
+  let total_factor = final_intensity * normal_factor;
+  
+  // Metallic silver/blue color scheme
+  Color::new(
+    (180.0 * total_factor) as u8,
+    (190.0 * total_factor) as u8,
+    (210.0 * total_factor) as u8
+  )
+}
+
+// Orbit shader - creates translucent orbital path visualization
+fn orbit_shader(position: Vec3, time: f32) -> Color {
+  // Layer 1: Base orbit line
+  let orbit_intensity = 0.3;
+  
+  // Layer 2: Pulsing effect to make orbit visible
+  let pulse = (time * 1.5).sin() * 0.2 + 0.8;
+  
+  // Layer 3: Distance-based fading
+  let distance_fade = (position.magnitude() * 0.01).min(1.0);
+  
+  // Combine for orbit visualization
+  let final_intensity = orbit_intensity * pulse * distance_fade;
+  
+  // Cyan/blue orbital lines
+  Color::new(
+    (100.0 * final_intensity) as u8,
+    (200.0 * final_intensity) as u8,
+    (255.0 * final_intensity) as u8
+  )
 }
 

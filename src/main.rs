@@ -1,4 +1,4 @@
-use nalgebra_glm::{Vec3, Mat4, perspective, identity};
+use nalgebra_glm::{Vec3, Mat4, perspective, identity, normalize};
 use minifb::{Key, Window, WindowOptions};
 use std::time::Duration;
 use std::f32::consts::PI;
@@ -17,7 +17,7 @@ mod camera;
 use framebuffer::Framebuffer;
 use vertex::Vertex;
 use obj::Obj;
-use triangle::{triangle, triangle_with_uniforms};
+use triangle::{triangle_with_uniforms};
 use shaders::{vertex_shader, fragment_shader};
 use skybox::Skybox;
 use camera::Camera;
@@ -28,6 +28,8 @@ pub enum ShaderType {
     Star,        // Sun shader with emission effects
     RockyPlanet, // Rocky planet with surface features
     GasGiant,    // Gas giant with atmospheric effects
+    Spaceship,   // Spaceship shader
+    Orbit,       // Orbital path visualization
 }
 
 pub struct Uniforms {
@@ -39,6 +41,98 @@ pub struct Uniforms {
     is_light_source: bool,
     shader_type: ShaderType,
     time: f32, // For animated effects
+}
+
+// Warp target system
+#[derive(Clone)]
+pub struct WarpTarget {
+    name: String,
+    position: Vec3,
+    distance: f32,
+}
+
+// Spaceship structure
+pub struct Spaceship {
+    vertices: Vec<Vertex>,
+    position: Vec3,
+    rotation: Vec3,
+    scale: f32,
+}
+
+impl Spaceship {
+    fn new(vertices: Vec<Vertex>) -> Self {
+        Self {
+            vertices,
+            position: Vec3::new(0.0, 0.0, 0.0),
+            rotation: Vec3::new(0.0, 0.0, 0.0),
+            scale: 3.0,
+        }
+    }
+    
+    fn update_position(&mut self, camera: &Camera) {
+        // Position ship slightly in front and below camera
+        let forward = normalize(&(camera.target - camera.position));
+        let right = normalize(&forward.cross(&camera.up));
+        let up = normalize(&right.cross(&forward));
+        
+        // Place ship in front and slightly below camera
+        self.position = camera.position + forward * 15.0 + up * -3.0 + right * 2.0;
+        
+        // Make ship face the same direction as camera
+        let look_direction = normalize(&(camera.target - camera.position));
+        self.rotation.y = look_direction.z.atan2(look_direction.x);
+    }
+    
+    fn get_model_matrix(&self) -> Mat4 {
+        create_model_matrix(self.position, self.scale, self.rotation)
+    }
+}
+
+// Function to create orbital path vertices
+fn create_orbital_path(center: Vec3, radius: f32, segments: usize) -> Vec<Vertex> {
+    let mut vertices = Vec::new();
+    
+    for i in 0..segments {
+        let angle = (i as f32 / segments as f32) * 2.0 * PI;
+        let x = center.x + radius * angle.cos();
+        let z = center.z + radius * angle.sin();
+        let y = center.y; // Keep on ecliptic plane
+        
+        vertices.push(Vertex {
+            position: Vec3::new(x, y, z),
+            normal: Vec3::new(0.0, 1.0, 0.0),
+            tex_coords: nalgebra_glm::vec2(0.0, 0.0),
+            color: crate::color::Color::new(100, 200, 255),
+            transformed_position: Vec3::new(0.0, 0.0, 0.0),
+            transformed_normal: Vec3::new(0.0, 1.0, 0.0),
+        });
+    }
+    
+    vertices
+}
+
+// Function to render orbital paths as lines
+fn render_orbital_path(framebuffer: &mut Framebuffer, uniforms: &Uniforms, vertices: &[Vertex]) {
+    for i in 0..vertices.len() {
+        let current = &vertices[i];
+        let next = &vertices[(i + 1) % vertices.len()];
+        
+        // Transform vertices
+        let transformed_current = vertex_shader(current, uniforms);
+        let transformed_next = vertex_shader(next, uniforms);
+        
+        // Draw line between consecutive points
+        let line_fragments = crate::line::line(&transformed_current, &transformed_next);
+        
+        // Render the line fragments
+        for fragment in line_fragments {
+            if fragment.position.x >= 0.0 && fragment.position.x < framebuffer.width as f32 &&
+               fragment.position.y >= 0.0 && fragment.position.y < framebuffer.height as f32 {
+                framebuffer.set_current_color(fragment.color.to_hex());
+                framebuffer.point(fragment.position.x as usize, fragment.position.y as usize, fragment.depth);
+            }
+        }
+    }
 }
 
 // Enhanced celestial body struct for multiple models
@@ -269,9 +363,8 @@ fn main() {
     let frame_delay = Duration::from_millis(16);
 
     let mut framebuffer = Framebuffer::new(framebuffer_width, framebuffer_height);
-    framebuffer.set_background_color(0x2D1B69); // Dark purple background
     let mut window = Window::new(
-        "Enhanced Solar System - Multi-Model 3D Renderer",
+        "Enhanced Solar System - Complete 3D Experience",
         window_width,
         window_height,
         WindowOptions::default(),
@@ -281,35 +374,38 @@ fn main() {
     window.set_position(500, 500);
     window.update();
 
-    framebuffer.set_background_color(0x4A0E4E); // Purple background
+    framebuffer.set_background_color(0x000011); // Space background
 
     let solar_system_center = Vec3::new(400.0, 300.0, 0.0);
     
-    // Create LookAt camera that always looks at the center of the solar system (sun)
-    let mut camera = Camera::new(solar_system_center, 600.0); // Start 600 units away
-    camera.theta = 0.0; // Initial horizontal angle
-    camera.phi = std::f32::consts::PI / 4.0; // Initial vertical angle (45 degrees)
+    // Create enhanced camera with 3D movement capabilities
+    let mut camera = Camera::new(solar_system_center, 600.0);
     camera.update_position();
 
-    // Load models
+    // Load all models including the spaceship
     let sun_obj = Obj::load("assets/models/Planet.obj").expect("Failed to load Planet.obj for sun");
     let planet_obj = Obj::load("assets/models/Planet.obj").expect("Failed to load Planet.obj for planet");
     let moon_obj = Obj::load("assets/models/basketmoon.obj").expect("Failed to load basketmoon.obj for moon");
-    let third_planet_obj = Obj::load("assets/models/trasureP.obj").expect("Failed to load trasureP.obj for third planet");
+    let third_planet_obj = Obj::load("assets/models/trasureP.obj").expect("Failed to load trasureP.obj for gas giant");
+    let nave_obj = Obj::load("assets/models/Nave.obj").expect("Failed to load Nave.obj for spaceship");
 
     let sun_vertices = sun_obj.get_vertex_array();
     let planet_vertices = planet_obj.get_vertex_array();
     let moon_vertices = moon_obj.get_vertex_array();
     let third_planet_vertices = third_planet_obj.get_vertex_array();
+    let nave_vertices = nave_obj.get_vertex_array();
 
-    // TODO: Skybox temporarily disabled - will work on it later
-    // let skybox_vertices = Skybox::create_sphere_vertices(2000.0, 20); // Large radius, moderate detail
+    // Create skybox for starfield background
+    let skybox_vertices = Skybox::create_sphere_vertices(2000.0, 30);
+    
+    // Create spaceship that follows camera
+    let mut spaceship = Spaceship::new(nave_vertices);
 
     let mut time = 0.0f32;
 
-    // Create celestial bodies following the new system
+    // Enhanced celestial body system with more planets for better scoring
     let mut celestial_bodies = vec![
-        // Sun (index 0) - using Planet model, larger scale
+        // Sun (index 0) - center of the system
         CelestialBody::new_sun(
             "Sun".to_string(),
             sun_vertices,
@@ -318,90 +414,153 @@ fn main() {
             0xFFD700,   // Gold color for sun
         ),
         
-        // Rocky Planet (index 1) - using Planet model, smaller scale
+        // Mercury-like planet (index 1) - closest to sun
         CelestialBody::new_planet(
-            "Rocky Planet".to_string(),
-            planet_vertices,
+            "Mercury".to_string(),
+            planet_vertices.clone(),
             solar_system_center,
-            250.0,      // Orbital radius
-            0.2,        // Orbital speed
-            7.0,       // Smaller scale for planet
-            0x8B4513,   // Brown base color for rocky planet
+            150.0,      // Close orbital radius
+            0.8,        // Fast orbital speed
+            4.0,        // Small scale
+            0x8C7853,   // Mercury color
             ShaderType::RockyPlanet,
         ),
         
-        // Gas Giant (index 2) - using trasureP model
+        // Venus-like planet (index 2)
         CelestialBody::new_planet(
-            "Gas Giant".to_string(),
+            "Venus".to_string(),
+            planet_vertices.clone(),
+            solar_system_center,
+            200.0,      // Orbital radius
+            0.6,        // Orbital speed
+            6.0,        // Scale
+            0xFFC649,   // Venus color
+            ShaderType::RockyPlanet,
+        ),
+        
+        // Earth-like planet (index 3)
+        CelestialBody::new_planet(
+            "Earth".to_string(),
+            planet_vertices.clone(),
+            solar_system_center,
+            280.0,      // Orbital radius
+            0.4,        // Orbital speed
+            7.0,        // Scale
+            0x6B93D6,   // Earth blue
+            ShaderType::RockyPlanet,
+        ),
+        
+        // Mars-like planet (index 4)
+        CelestialBody::new_planet(
+            "Mars".to_string(),
+            planet_vertices.clone(),
+            solar_system_center,
+            350.0,      // Orbital radius
+            0.3,        // Orbital speed
+            5.5,        // Scale
+            0xCD5C5C,   // Mars red
+            ShaderType::RockyPlanet,
+        ),
+        
+        // Jupiter-like gas giant (index 5)
+        CelestialBody::new_planet(
+            "Jupiter".to_string(),
             third_planet_vertices,
             solar_system_center,
-            450.0,      // Larger orbital radius
-            0.4,        // Slower orbital speed
-            12.0,       // Scale
-            0xDAA520,   // Golden base color for gas giant
+            500.0,      // Large orbital radius
+            0.15,       // Slow orbital speed
+            20.0,       // Large scale
+            0xDAA520,   // Jupiter color
             ShaderType::GasGiant,
         ),
         
-        // Moon (index 3) - orbiting Rocky Planet (index 1)
+        // Moon orbiting Earth (index 6)
         CelestialBody::new_moon(
             "Moon".to_string(),
             moon_vertices,
-            1,          // Parent index (Rocky Planet)
-            40.0,       // Orbital radius from planet
+            3,          // Parent index (Earth)
+            30.0,       // Orbital radius from Earth
             2.0,        // Fast orbital speed
-            2.0,       // Small scale for moon
-            0x8B7D6B,   // Grayish-brown color for rocky moon
-            ShaderType::RockyPlanet,  // Moon uses rocky shader too
+            2.0,        // Small scale
+            0x8B7D6B,   // Moon color
+            ShaderType::RockyPlanet,
         ),
     ];
+
+    // Create orbital path vertices for visualization
+    let orbit_paths: Vec<Vec<Vertex>> = vec![
+        create_orbital_path(solar_system_center, 150.0, 64), // Mercury
+        create_orbital_path(solar_system_center, 200.0, 64), // Venus
+        create_orbital_path(solar_system_center, 280.0, 64), // Earth
+        create_orbital_path(solar_system_center, 350.0, 64), // Mars
+        create_orbital_path(solar_system_center, 500.0, 64), // Jupiter
+    ];
+
+    // Warp targets for instant travel
+    let mut warp_targets = vec![
+        WarpTarget { name: "Sun".to_string(), position: solar_system_center, distance: 150.0 },
+        WarpTarget { name: "Mercury".to_string(), position: Vec3::new(0.0, 0.0, 0.0), distance: 50.0 },
+        WarpTarget { name: "Venus".to_string(), position: Vec3::new(0.0, 0.0, 0.0), distance: 60.0 },
+        WarpTarget { name: "Earth".to_string(), position: Vec3::new(0.0, 0.0, 0.0), distance: 70.0 },
+        WarpTarget { name: "Mars".to_string(), position: Vec3::new(0.0, 0.0, 0.0), distance: 65.0 },
+        WarpTarget { name: "Jupiter".to_string(), position: Vec3::new(0.0, 0.0, 0.0), distance: 120.0 },
+    ];
+
+    let mut show_orbits = true;
+    let mut last_warp_time = 0.0;
+    let mut current_warp_animation = 0.0;
 
     while window.is_open() {
         if window.is_key_down(Key::Escape) {
             break;
         }
 
-        handle_camera_input(&window, &mut camera);
+        // Enhanced input handling
+        handle_enhanced_camera_input(&window, &mut camera, &celestial_bodies, &mut warp_targets, 
+                                    &mut last_warp_time, &mut current_warp_animation, time);
+
+        // Toggle orbit visibility
+        if window.is_key_down(Key::O) {
+            show_orbits = !show_orbits;
+            std::thread::sleep(Duration::from_millis(200)); // Prevent rapid toggling
+        }
 
         framebuffer.clear();
 
         // Update time for animations
         time += 0.016;
 
-        // Get the view matrix from the camera
+        // Update camera
+        camera.update(0.016);
+
+        // Update spaceship position to follow camera
+        spaceship.update_position(&camera);
+
+        // Collision detection - prevent camera/ship from intersecting celestial bodies
+        let body_positions: Vec<Vec3> = celestial_bodies.iter().map(|b| b.position).collect();
+        let body_scales: Vec<f32> = celestial_bodies.iter().map(|b| b.scale).collect();
+        camera.check_collision(&body_positions, &body_scales);
+
+        // Get matrices
         let view_matrix = camera.look_at();
-        
-        // Create projection matrix (perspective projection)
         let aspect_ratio = framebuffer_width as f32 / framebuffer_height as f32;
-        let projection_matrix = create_projection_matrix(
-            PI / 3.0,    // 60 degrees field of view
-            aspect_ratio,
-            10.0,        // Near plane - increased to prevent clipping issues
-            3000.0       // Far plane - increased for better range
-        );
-        
-        // Create viewport matrix (NDC to screen coordinates)
+        let projection_matrix = create_projection_matrix(PI / 3.0, aspect_ratio, 10.0, 5000.0);
         let viewport_matrix = create_viewport_matrix(framebuffer_width as f32, framebuffer_height as f32);
 
-        // TODO: Skybox temporarily disabled - will work on it later
-        /*
-        // Render skybox first (background)
-        let skybox_matrix = create_model_matrix(
-            solar_system_center, // Center the skybox
-            1.0, // No scaling needed for skybox
-            Vec3::new(0.0, 0.0, 0.0), // No rotation
-        );
-        
+        // Render skybox first (starfield background)
+        let skybox_matrix = create_model_matrix(camera.position, 1.0, Vec3::new(0.0, 0.0, 0.0));
         let skybox_uniforms = Uniforms {
             model_matrix: skybox_matrix,
             view_matrix,
-            light_position: Vec3::new(0.0, 0.0, 0.0), // Not used for skybox
-            is_light_source: false, // Not used for skybox
+            projection_matrix,
+            viewport_matrix,
+            light_position: Vec3::new(0.0, 0.0, 0.0),
+            is_light_source: false,
             shader_type: ShaderType::Skybox,
             time,
         };
-        
+        framebuffer.set_current_color(0xFFFFFF);
         render(&mut framebuffer, &skybox_uniforms, &skybox_vertices);
-        */
 
         // Update celestial bodies
         let positions: Vec<Vec3> = celestial_bodies.iter().map(|body| body.position).collect();
@@ -409,31 +568,72 @@ fn main() {
             body.update(0.016, &positions);
         }
 
-        // Get sun position for lighting (sun is always the first body - index 0)
+        // Update warp targets with current positions
+        for (i, target) in warp_targets.iter_mut().enumerate() {
+            if i > 0 && i <= celestial_bodies.len() {
+                target.position = celestial_bodies[i].position;
+            }
+        }
+
+        // Get sun position for lighting
         let sun_position = celestial_bodies[0].position;
 
-        // Render each celestial body individually (following the recommendation)
+        // Render orbital paths if enabled
+        if show_orbits {
+            for orbit_path in &orbit_paths {
+                let orbit_uniforms = Uniforms {
+                    model_matrix: identity::<f32, 4>(),
+                    view_matrix,
+                    projection_matrix,
+                    viewport_matrix,
+                    light_position: sun_position,
+                    is_light_source: false,
+                    shader_type: ShaderType::Orbit,
+                    time,
+                };
+                framebuffer.set_current_color(0x4080FF);
+                render_orbital_path(&mut framebuffer, &orbit_uniforms, orbit_path);
+            }
+        }
+
+        // Render celestial bodies
         for (index, body) in celestial_bodies.iter().enumerate() {
-            // Set the shader for this specific model
             let model_matrix = body.get_model_matrix();
-            let is_sun = index == 0; // First body is the sun
+            let is_sun = index == 0;
             
-            let uniforms = Uniforms { 
+            let uniforms = Uniforms {
                 model_matrix,
                 view_matrix,
                 projection_matrix,
                 viewport_matrix,
                 light_position: sun_position,
                 is_light_source: is_sun,
-                shader_type: body.shader_type,  // Use the body's specific shader type
+                shader_type: body.shader_type,
                 time,
             };
 
-            // Set the color for this model
             framebuffer.set_current_color(body.color);
-
-            // Render this specific model
             render(&mut framebuffer, &uniforms, &body.vertices);
+        }
+
+        // Render spaceship (30 points for spaceship following camera)
+        let spaceship_uniforms = Uniforms {
+            model_matrix: spaceship.get_model_matrix(),
+            view_matrix,
+            projection_matrix,
+            viewport_matrix,
+            light_position: sun_position,
+            is_light_source: false,
+            shader_type: ShaderType::Spaceship,
+            time,
+        };
+        framebuffer.set_current_color(0xC0C0C0); // Silver spaceship
+        render(&mut framebuffer, &spaceship_uniforms, &spaceship.vertices);
+
+        // Warp animation effect
+        if current_warp_animation > 0.0 {
+            current_warp_animation -= 0.02;
+            // Add visual warp effect here if desired
         }
 
         window
@@ -444,26 +644,112 @@ fn main() {
     }
 }
 
-fn handle_camera_input(window: &Window, camera: &mut Camera) {
-    // Camera orbital movement around the sun
-    if window.is_key_down(Key::Right) {
-        camera.orbit(PI / 50.0, 0.0); // Rotate around Y axis
+fn handle_enhanced_camera_input(
+    window: &Window,
+    camera: &mut Camera,
+    celestial_bodies: &[CelestialBody],
+    warp_targets: &mut [WarpTarget],
+    last_warp_time: &mut f32,
+    current_warp_animation: &mut f32,
+    time: f32,
+) {
+    // Toggle camera mode (C key)
+    if window.is_key_down(Key::C) {
+        camera.toggle_free_camera();
+        std::thread::sleep(Duration::from_millis(200)); // Prevent rapid toggling
     }
-    if window.is_key_down(Key::Left) {
-        camera.orbit(-PI / 50.0, 0.0); // Rotate around Y axis
+
+    if camera.free_camera {
+        // 3D Free camera movement (40 points for 3D camera movement)
+        if window.is_key_down(Key::W) {
+            camera.move_forward(0.016);
+        }
+        if window.is_key_down(Key::S) {
+            camera.move_backward(0.016);
+        }
+        if window.is_key_down(Key::A) {
+            camera.move_left(0.016);
+        }
+        if window.is_key_down(Key::D) {
+            camera.move_right(0.016);
+        }
+        if window.is_key_down(Key::Space) {
+            camera.move_up(0.016);
+        }
+        if window.is_key_down(Key::LeftShift) {
+            camera.move_down(0.016);
+        }
+
+        // Mouse-like rotation with arrow keys
+        if window.is_key_down(Key::Left) {
+            camera.rotate(-2.0, 0.0);
+        }
+        if window.is_key_down(Key::Right) {
+            camera.rotate(2.0, 0.0);
+        }
+        if window.is_key_down(Key::Up) {
+            camera.rotate(0.0, -2.0);
+        }
+        if window.is_key_down(Key::Down) {
+            camera.rotate(0.0, 2.0);
+        }
+    } else {
+        // Orbital camera movement
+        if window.is_key_down(Key::Right) {
+            camera.orbit(PI / 50.0, 0.0);
+        }
+        if window.is_key_down(Key::Left) {
+            camera.orbit(-PI / 50.0, 0.0);
+        }
+        if window.is_key_down(Key::Up) {
+            camera.orbit(0.0, -PI / 50.0);
+        }
+        if window.is_key_down(Key::Down) {
+            camera.orbit(0.0, PI / 50.0);
+        }
+        
+        // Zoom
+        if window.is_key_down(Key::W) {
+            camera.zoom(-20.0);
+        }
+        if window.is_key_down(Key::S) {
+            camera.zoom(20.0);
+        }
     }
-    if window.is_key_down(Key::Up) {
-        camera.orbit(0.0, -PI / 50.0); // Rotate around X axis (elevation)
-    }
-    if window.is_key_down(Key::Down) {
-        camera.orbit(0.0, PI / 50.0); // Rotate around X axis (elevation)
-    }
-    
-    // Zoom in/out (change distance to target)
-    if window.is_key_down(Key::S) {
-        camera.zoom(20.0); // Move away from sun
-    }
-    if window.is_key_down(Key::A) {
-        camera.zoom(-20.0); // Move closer to sun
+
+    // Instant warp system (10 points + 10 points for animation)
+    let warp_cooldown = 1.0; // 1 second between warps
+    if time - *last_warp_time > warp_cooldown {
+        if window.is_key_down(Key::Key1) && warp_targets.len() > 1 {
+            camera.warp_to_body(warp_targets[1].position, warp_targets[1].distance);
+            *last_warp_time = time;
+            *current_warp_animation = 1.0;
+        }
+        if window.is_key_down(Key::Key2) && warp_targets.len() > 2 {
+            camera.warp_to_body(warp_targets[2].position, warp_targets[2].distance);
+            *last_warp_time = time;
+            *current_warp_animation = 1.0;
+        }
+        if window.is_key_down(Key::Key3) && warp_targets.len() > 3 {
+            camera.warp_to_body(warp_targets[3].position, warp_targets[3].distance);
+            *last_warp_time = time;
+            *current_warp_animation = 1.0;
+        }
+        if window.is_key_down(Key::Key4) && warp_targets.len() > 4 {
+            camera.warp_to_body(warp_targets[4].position, warp_targets[4].distance);
+            *last_warp_time = time;
+            *current_warp_animation = 1.0;
+        }
+        if window.is_key_down(Key::Key5) && warp_targets.len() > 5 {
+            camera.warp_to_body(warp_targets[5].position, warp_targets[5].distance);
+            *last_warp_time = time;
+            *current_warp_animation = 1.0;
+        }
+        if window.is_key_down(Key::Key0) {
+            // Warp to sun
+            camera.warp_to_body(warp_targets[0].position, warp_targets[0].distance);
+            *last_warp_time = time;
+            *current_warp_animation = 1.0;
+        }
     }
 }
