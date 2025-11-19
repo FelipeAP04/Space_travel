@@ -81,6 +81,14 @@ impl Camera {
         }
     }
 
+    // Set new target for orbital camera
+    pub fn set_target(&mut self, new_target: Vec3) {
+        self.target = new_target;
+        if !self.free_camera {
+            self.update_position();
+        }
+    }
+
     // 3D Camera movement methods
     pub fn move_forward(&mut self, delta: f32) {
         if self.free_camera {
@@ -184,6 +192,9 @@ impl Camera {
             // In orbital mode, update target and distance
             self.target = body_position;
             self.distance = safe_distance;
+            // Reset orbital angles for better initial view
+            self.theta = 0.0;
+            self.phi = PI / 2.0;
             self.update_position();
         }
     }

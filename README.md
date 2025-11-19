@@ -2,6 +2,9 @@
 
 Un simulador interactivo del sistema solar desarrollado en Rust con capacidades avanzadas de renderizado 3D, navegación en tiempo real y efectos visuales espectaculares.
 
+## 📹 Video Demostración
+[Ver demostración en YouTube](https://youtube.com/shorts/oW5Qp7X-HVU)
+
 ## ✨ Características Implementadas
 
 ### 🌌 Sistema Solar Realista

@@ -41,6 +41,7 @@ pub struct Uniforms {
     is_light_source: bool,
     shader_type: ShaderType,
     time: f32, // For animated effects
+    base_color: u32, // Base color for the object
 }
 
 // Warp target system
@@ -57,6 +58,7 @@ pub struct Spaceship {
     position: Vec3,
     rotation: Vec3,
     scale: f32,
+    visible: bool,  // Add visibility flag
 }
 
 impl Spaceship {
@@ -66,10 +68,11 @@ impl Spaceship {
             position: Vec3::new(0.0, 0.0, 0.0),
             rotation: Vec3::new(0.0, 0.0, 0.0),
             scale: 3.0,
+            visible: true,  // Ship starts visible
         }
     }
     
-    fn update_position(&mut self, camera: &Camera) {
+    fn update_position(&mut self, camera: &Camera, sun_position: Vec3) {
         // Position ship slightly in front and below camera
         let forward = normalize(&(camera.target - camera.position));
         let right = normalize(&forward.cross(&camera.up));
@@ -78,9 +81,18 @@ impl Spaceship {
         // Place ship in front and slightly below camera
         self.position = camera.position + forward * 15.0 + up * -3.0 + right * 2.0;
         
-        // Make ship face the same direction as camera
+        // Make ship face the same direction as the camera
         let look_direction = normalize(&(camera.target - camera.position));
-        self.rotation.y = look_direction.z.atan2(look_direction.x);
+        
+        // Calculate yaw (Y rotation) - horizontal rotation in camera direction
+        self.rotation.y = look_direction.x.atan2(-look_direction.z) + PI;
+        
+        // Calculate pitch (X rotation) - vertical rotation in camera direction
+        let horizontal_distance = (look_direction.x * look_direction.x + look_direction.z * look_direction.z).sqrt();
+        self.rotation.x = look_direction.y.atan2(horizontal_distance);
+        
+        // Keep roll (Z rotation) minimal for stability
+        self.rotation.z = 0.0;
     }
     
     fn get_model_matrix(&self) -> Mat4 {
@@ -422,7 +434,7 @@ fn main() {
             150.0,      // Close orbital radius
             0.8,        // Fast orbital speed
             4.0,        // Small scale
-            0x8C7853,   // Mercury color
+            0xA0826D,   // Mercury brownish-gray
             ShaderType::RockyPlanet,
         ),
         
@@ -434,7 +446,7 @@ fn main() {
             200.0,      // Orbital radius
             0.6,        // Orbital speed
             6.0,        // Scale
-            0xFFC649,   // Venus color
+            0xE8CDA2,   // Venus pale yellow
             ShaderType::RockyPlanet,
         ),
         
@@ -446,7 +458,7 @@ fn main() {
             280.0,      // Orbital radius
             0.4,        // Orbital speed
             7.0,        // Scale
-            0x6B93D6,   // Earth blue
+            0x4A90E2,   // Earth deep blue
             ShaderType::RockyPlanet,
         ),
         
@@ -458,7 +470,7 @@ fn main() {
             350.0,      // Orbital radius
             0.3,        // Orbital speed
             5.5,        // Scale
-            0xCD5C5C,   // Mars red
+            0xE27B58,   // Mars orange-red
             ShaderType::RockyPlanet,
         ),
         
@@ -470,7 +482,7 @@ fn main() {
             500.0,      // Large orbital radius
             0.15,       // Slow orbital speed
             20.0,       // Large scale
-            0xDAA520,   // Jupiter color
+            0xC88B3A,   // Jupiter tan/orange
             ShaderType::GasGiant,
         ),
         
@@ -482,7 +494,7 @@ fn main() {
             30.0,       // Orbital radius from Earth
             2.0,        // Fast orbital speed
             2.0,        // Small scale
-            0x8B7D6B,   // Moon color
+            0xC0C0C0,   // Moon light gray
             ShaderType::RockyPlanet,
         ),
     ];
@@ -509,6 +521,7 @@ fn main() {
     let mut show_orbits = true;
     let mut last_warp_time = 0.0;
     let mut current_warp_animation = 0.0;
+    let mut warped_body_index: Option<usize> = None; // Track which body we're following
 
     while window.is_open() {
         if window.is_key_down(Key::Escape) {
@@ -517,11 +530,17 @@ fn main() {
 
         // Enhanced input handling
         handle_enhanced_camera_input(&window, &mut camera, &celestial_bodies, &mut warp_targets, 
-                                    &mut last_warp_time, &mut current_warp_animation, time);
+                                    &mut last_warp_time, &mut current_warp_animation, time, &mut warped_body_index);
 
         // Toggle orbit visibility
         if window.is_key_down(Key::O) {
             show_orbits = !show_orbits;
+            std::thread::sleep(Duration::from_millis(200)); // Prevent rapid toggling
+        }
+
+        // Toggle spaceship visibility
+        if window.is_key_down(Key::H) {
+            spaceship.visible = !spaceship.visible;
             std::thread::sleep(Duration::from_millis(200)); // Prevent rapid toggling
         }
 
@@ -533,13 +552,16 @@ fn main() {
         // Update camera
         camera.update(0.016);
 
+        // Get sun position for lighting and ship orientation
+        let sun_position = celestial_bodies[0].position;
+
         // Update spaceship position to follow camera
-        spaceship.update_position(&camera);
+        spaceship.update_position(&camera, sun_position);
 
         // Collision detection - prevent camera/ship from intersecting celestial bodies
-        let body_positions: Vec<Vec3> = celestial_bodies.iter().map(|b| b.position).collect();
-        let body_scales: Vec<f32> = celestial_bodies.iter().map(|b| b.scale).collect();
-        camera.check_collision(&body_positions, &body_scales);
+        // let body_positions: Vec<Vec3> = celestial_bodies.iter().map(|b| b.position).collect();
+        // let body_scales: Vec<f32> = celestial_bodies.iter().map(|b| b.scale).collect();
+        // camera.check_collision(&body_positions, &body_scales);
 
         // Get matrices
         let view_matrix = camera.look_at();
@@ -558,6 +580,7 @@ fn main() {
             is_light_source: false,
             shader_type: ShaderType::Skybox,
             time,
+            base_color: 0xFFFFFF,
         };
         framebuffer.set_current_color(0xFFFFFF);
         render(&mut framebuffer, &skybox_uniforms, &skybox_vertices);
@@ -568,15 +591,19 @@ fn main() {
             body.update(0.016, &positions);
         }
 
+        // If warped to a body, update camera to follow it
+        if let Some(body_idx) = warped_body_index {
+            if body_idx < celestial_bodies.len() {
+                camera.set_target(celestial_bodies[body_idx].position);
+            }
+        }
+
         // Update warp targets with current positions
         for (i, target) in warp_targets.iter_mut().enumerate() {
             if i > 0 && i <= celestial_bodies.len() {
                 target.position = celestial_bodies[i].position;
             }
         }
-
-        // Get sun position for lighting
-        let sun_position = celestial_bodies[0].position;
 
         // Render orbital paths if enabled
         if show_orbits {
@@ -590,6 +617,7 @@ fn main() {
                     is_light_source: false,
                     shader_type: ShaderType::Orbit,
                     time,
+                    base_color: 0x4080FF,
                 };
                 framebuffer.set_current_color(0x4080FF);
                 render_orbital_path(&mut framebuffer, &orbit_uniforms, orbit_path);
@@ -610,25 +638,29 @@ fn main() {
                 is_light_source: is_sun,
                 shader_type: body.shader_type,
                 time,
+                base_color: body.color,
             };
 
             framebuffer.set_current_color(body.color);
             render(&mut framebuffer, &uniforms, &body.vertices);
         }
 
-        // Render spaceship (30 points for spaceship following camera)
-        let spaceship_uniforms = Uniforms {
-            model_matrix: spaceship.get_model_matrix(),
-            view_matrix,
-            projection_matrix,
-            viewport_matrix,
-            light_position: sun_position,
-            is_light_source: false,
-            shader_type: ShaderType::Spaceship,
-            time,
-        };
-        framebuffer.set_current_color(0xC0C0C0); // Silver spaceship
-        render(&mut framebuffer, &spaceship_uniforms, &spaceship.vertices);
+        // Render spaceship (30 points for spaceship following camera) - only if visible
+        if spaceship.visible {
+            let spaceship_uniforms = Uniforms {
+                model_matrix: spaceship.get_model_matrix(),
+                view_matrix,
+                projection_matrix,
+                viewport_matrix,
+                light_position: sun_position,
+                is_light_source: false,
+                shader_type: ShaderType::Spaceship,
+                time,
+                base_color: 0xC0C0C0,
+            };
+            framebuffer.set_current_color(0xC0C0C0); // Silver spaceship
+            render(&mut framebuffer, &spaceship_uniforms, &spaceship.vertices);
+        }
 
         // Warp animation effect
         if current_warp_animation > 0.0 {
@@ -652,10 +684,15 @@ fn handle_enhanced_camera_input(
     last_warp_time: &mut f32,
     current_warp_animation: &mut f32,
     time: f32,
+    warped_body_index: &mut Option<usize>,
 ) {
     // Toggle camera mode (C key)
     if window.is_key_down(Key::C) {
         camera.toggle_free_camera();
+        // Clear warp tracking when switching to free camera
+        if camera.free_camera {
+            *warped_body_index = None;
+        }
         std::thread::sleep(Duration::from_millis(200)); // Prevent rapid toggling
     }
 
@@ -717,37 +754,68 @@ fn handle_enhanced_camera_input(
         }
     }
 
-    // Instant warp system (10 points + 10 points for animation)
+    // Enhanced warp system with orbital mode and zoom (10 points + 10 points for animation)
     let warp_cooldown = 1.0; // 1 second between warps
     if time - *last_warp_time > warp_cooldown {
         if window.is_key_down(Key::Key1) && warp_targets.len() > 1 {
+            // Switch to orbital mode for better planet exploration
+            if camera.free_camera {
+                camera.toggle_free_camera();
+            }
             camera.warp_to_body(warp_targets[1].position, warp_targets[1].distance);
+            camera.set_target(warp_targets[1].position);
+            *warped_body_index = Some(1); // Track Mercury
             *last_warp_time = time;
             *current_warp_animation = 1.0;
         }
         if window.is_key_down(Key::Key2) && warp_targets.len() > 2 {
+            if camera.free_camera {
+                camera.toggle_free_camera();
+            }
             camera.warp_to_body(warp_targets[2].position, warp_targets[2].distance);
+            camera.set_target(warp_targets[2].position);
+            *warped_body_index = Some(2); // Track Venus
             *last_warp_time = time;
             *current_warp_animation = 1.0;
         }
         if window.is_key_down(Key::Key3) && warp_targets.len() > 3 {
+            if camera.free_camera {
+                camera.toggle_free_camera();
+            }
             camera.warp_to_body(warp_targets[3].position, warp_targets[3].distance);
+            camera.set_target(warp_targets[3].position);
+            *warped_body_index = Some(3); // Track Earth
             *last_warp_time = time;
             *current_warp_animation = 1.0;
         }
         if window.is_key_down(Key::Key4) && warp_targets.len() > 4 {
+            if camera.free_camera {
+                camera.toggle_free_camera();
+            }
             camera.warp_to_body(warp_targets[4].position, warp_targets[4].distance);
+            camera.set_target(warp_targets[4].position);
+            *warped_body_index = Some(4); // Track Mars
             *last_warp_time = time;
             *current_warp_animation = 1.0;
         }
         if window.is_key_down(Key::Key5) && warp_targets.len() > 5 {
+            if camera.free_camera {
+                camera.toggle_free_camera();
+            }
             camera.warp_to_body(warp_targets[5].position, warp_targets[5].distance);
+            camera.set_target(warp_targets[5].position);
+            *warped_body_index = Some(5); // Track Jupiter
             *last_warp_time = time;
             *current_warp_animation = 1.0;
         }
         if window.is_key_down(Key::Key0) {
             // Warp to sun
+            if camera.free_camera {
+                camera.toggle_free_camera();
+            }
             camera.warp_to_body(warp_targets[0].position, warp_targets[0].distance);
+            camera.set_target(warp_targets[0].position);
+            *warped_body_index = Some(0); // Track Sun
             *last_warp_time = time;
             *current_warp_animation = 1.0;
         }

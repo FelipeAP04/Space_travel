@@ -55,11 +55,11 @@ pub fn vertex_shader(vertex: &Vertex, uniforms: &Uniforms) -> Vertex {
     }
     ShaderType::RockyPlanet => {
       // Rocky planet with surface features
-      rocky_planet_shader(vertex.position, transformed_normal, uniforms.time)
+      rocky_planet_shader(vertex.position, transformed_normal, uniforms.time, uniforms.base_color)
     }
     ShaderType::GasGiant => {
       // Gas giant with atmospheric bands
-      gas_giant_shader(vertex.position, transformed_normal, uniforms.time)
+      gas_giant_shader(vertex.position, transformed_normal, uniforms.time, uniforms.base_color)
     }
     ShaderType::Spaceship => {
       // Spaceship shader - metallic with some wear
@@ -182,41 +182,42 @@ fn star_shader(position: Vec3, time: f32) -> Color {
 }
 
 // Rocky planet shader - creates terrain-like features with multiple color layers
-fn rocky_planet_shader(position: Vec3, normal: Vec3, time: f32) -> Color {
+fn rocky_planet_shader(position: Vec3, normal: Vec3, time: f32, base_color: u32) -> Color {
+  // Extract base color components
+  let base_r = ((base_color >> 16) & 0xFF) as f32;
+  let base_g = ((base_color >> 8) & 0xFF) as f32;
+  let base_b = (base_color & 0xFF) as f32;
+  
   // Layer 1: Base terrain height using position as noise
   let terrain_noise = (position.x * 0.05).sin() * (position.y * 0.05).cos() + (position.z * 0.03).sin();
   let height_factor = (terrain_noise + 1.0) * 0.5; // Normalize to 0-1
   
   // Layer 2: Crater patterns
   let crater_pattern = ((position.x * 0.2).sin() * (position.y * 0.15).cos() * (position.z * 0.18).sin()).abs();
-  let crater_factor = if crater_pattern > 0.7 { 0.3 } else { 1.0 };
+  let crater_factor = if crater_pattern > 0.7 { 0.7 } else { 1.0 };
   
-  // Layer 3: Mineral veins and variation
-  let mineral_noise = ((position.x * 0.8 + position.y * 0.6).sin() + (position.z * 0.4).cos()) * 0.5 + 0.5;
+  // Layer 3: Surface variation
+  let surface_variation = ((position.x * 0.3 + position.y * 0.3).sin() + (position.z * 0.2).cos()) * 0.1 + 0.9;
   
-  // Layer 4: Surface roughness based on normal
-  let surface_roughness = (normal.x + normal.y + normal.z).abs() * 0.1 + 0.9;
+  // Combine factors
+  let detail_factor = height_factor * crater_factor * surface_variation;
   
-  // Combine layers for rocky appearance
-  let base_factor = height_factor * crater_factor * surface_roughness;
-  
-  // Color based on height and mineral content
-  if mineral_noise > 0.7 && height_factor > 0.6 {
-    // Iron-rich areas (reddish)
-    Color::new((180.0 * base_factor) as u8, (100.0 * base_factor) as u8, (80.0 * base_factor) as u8)
-  } else if height_factor > 0.4 {
-    // Highland terrain (grayish-brown)
-    Color::new((140.0 * base_factor) as u8, (120.0 * base_factor) as u8, (100.0 * base_factor) as u8)
-  } else {
-    // Lowland/impact areas (darker)
-    Color::new((90.0 * base_factor) as u8, (80.0 * base_factor) as u8, (70.0 * base_factor) as u8)
-  }
+  // Apply detail to base color
+  Color::new(
+    (base_r * detail_factor) as u8,
+    (base_g * detail_factor) as u8,
+    (base_b * detail_factor) as u8
+  )
 }
 
 // Gas giant shader - creates atmospheric bands and swirling patterns
-fn gas_giant_shader(position: Vec3, normal: Vec3, time: f32) -> Color {
+fn gas_giant_shader(position: Vec3, normal: Vec3, time: f32, base_color: u32) -> Color {
+  // Extract base color components
+  let base_r = ((base_color >> 16) & 0xFF) as f32;
+  let base_g = ((base_color >> 8) & 0xFF) as f32;
+  let base_b = (base_color & 0xFF) as f32;
+  
   // Layer 1: Atmospheric bands based on latitude (y-coordinate)
-  let latitude = (position.y * 0.02).sin() * 0.5 + 0.5;
   let band_pattern = (position.y * 0.1 + time * 0.1).sin() * 0.5 + 0.5;
   
   // Layer 2: Storm systems and turbulence
@@ -224,29 +225,18 @@ fn gas_giant_shader(position: Vec3, normal: Vec3, time: f32) -> Color {
   let storm_z = (position.z * 0.03 + time * 0.15).cos();
   let storm_factor = (storm_x * storm_z + 1.0) * 0.5;
   
-  // Layer 3: Gas composition variation
-  let composition_noise = ((position.x + position.z) * 0.01).sin() * 0.3 + 0.7;
+  // Layer 3: Atmospheric swirls
+  let swirl_pattern = ((position.x * 0.05).sin() * (position.z * 0.05).cos() + time * 0.05).sin() * 0.2 + 0.8;
   
-  // Layer 4: Atmospheric depth effect
-  let depth_factor = (normal.magnitude() * 0.8 + 0.2).min(1.0);
+  // Combine for atmospheric effect
+  let detail_factor = (band_pattern * 0.5 + 0.5) * storm_factor * swirl_pattern;
   
-  // Combine layers for gas giant appearance
-  let band_intensity = (latitude + band_pattern * 0.3) * composition_noise * depth_factor;
-  let storm_intensity = storm_factor * 0.4 + 0.6;
-  
-  // Create Jupiter-like coloring with bands
-  let final_factor = band_intensity * storm_intensity;
-  
-  if band_pattern > 0.6 {
-    // Light bands (cream/white zones)
-    Color::new((220.0 * final_factor) as u8, (200.0 * final_factor) as u8, (170.0 * final_factor) as u8)
-  } else if band_pattern > 0.3 {
-    // Dark bands (brown belts)
-    Color::new((160.0 * final_factor) as u8, (120.0 * final_factor) as u8, (80.0 * final_factor) as u8)
-  } else {
-    // Storm regions (reddish spots)
-    Color::new((200.0 * final_factor) as u8, (140.0 * final_factor) as u8, (100.0 * final_factor) as u8)
-  }
+  // Apply atmospheric bands to base color
+  Color::new(
+    (base_r * detail_factor) as u8,
+    (base_g * detail_factor) as u8,
+    (base_b * detail_factor) as u8
+  )
 }
 
 // Spaceship shader - creates metallic appearance with wear and detail
